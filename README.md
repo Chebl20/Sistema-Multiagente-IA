@@ -28,7 +28,7 @@ OBS.: Por favor, cada equipe mexa apenas no seu próprio agente e faça seu pull
 
 ## 🤖 Agentes do Sistema
 
-### 🌧️ Agente IRRIGADOR → *Equipe ?*
+### 🌧️ Agente IRRIGADOR → *Equipe B*
 **Objetivo:** Manter as plantas com umidade adequada para garantir seu crescimento saudável.  
 **Funções:**  
 - Identificar plantas com umidade baixa.  
@@ -36,7 +36,7 @@ OBS.: Por favor, cada equipe mexa apenas no seu próprio agente e faça seu pull
 
 ---
 
-### 🌾 Agente COLHEDOR → *Equipe ?*
+### 🌾 Agente COLHEDOR → *Equipe C*
 **Objetivo:** Identificar e colher as plantas que atingiram total maturidade.  
 **Funções:**  
 - Monitorar o índice de amadurecimento.  
@@ -44,7 +44,7 @@ OBS.: Por favor, cada equipe mexa apenas no seu próprio agente e faça seu pull
 
 ---
 
-### 🧪 Agente SENSOR → *Equipe ?*
+### 🧪 Agente SENSOR → *Equipe A*
 **Objetivo:** Monitorar e analisar os índices de umidade e amadurecimento de cada planta, compartilhando os dados com os demais agentes.  
 **Funções:**  
 - Observar periodicamente os valores das plantas.  
