@@ -3,6 +3,7 @@
 **Atividade de Inteligência Artificial - Sistemas de Informação - 2025.01**  
 **Projeto: Sistema Multiagente com 3 Agentes**
 
+OBS.: Por favor cada equipe mexa apenas no seu próprio agente e faça seu pull request quando necessário.
 ---
 
 ## 🧠 Descrição do Ambiente
