@@ -1,29 +1,48 @@
 import time
+
 AMARELO = (255, 215, 0)
 
 ultimo_tempo = 0
 delay = 2.0  # segundos
 
-def agir_colhedor(plantas):
+def agir_colhedor(plantas, pos_atual):
+    """
+    Retorna (pos_x, pos_y), mensagem, colhidas, removidas.
+    - plantas: lista de objetos com atributos x, y, maturidade, morta, coletada e método resetar()
+    - pos_atual: tupla (x_atual, y_atual) do agente
+    """
     global ultimo_tempo
+
     agora = time.time()
     if agora - ultimo_tempo < delay:
-        return (0, 0), "Aguardando próximo ciclo...", 0, 0
+        return pos_atual, "Aguardando próximo ciclo...", 0, 0
 
-    for planta in plantas:
-        if planta.maturidade >= 100 and not planta.coletada and not planta.morta:
-            planta.coletada = True
-            pos = (planta.x, planta.y)
-            planta.resetar()
-            ultimo_tempo = agora
-            return pos, f"Colheu e replantou em ({planta.x}, {planta.y})", 1, 0
-        elif planta.morta and not planta.coletada:
-            planta.coletada = True
-            pos = (planta.x, planta.y)
-            planta.resetar()
-            ultimo_tempo = agora
-            return pos, f"Removeu planta morta em ({planta.x}, {planta.y})", 0, 1
+    pendentes = [p for p in plantas if not p.coletada]
+    maduros = [p for p in pendentes if (not p.morta) and p.maturidade >= 100]
+    mortos  = [p for p in pendentes if p.morta]
 
+    def dist2(p):
+        dx = p.x - pos_atual[0]
+        dy = p.y - pos_atual[1]
+        return dx*dx + dy*dy
+
+    # primeiro colher maduros, depois remover mortos
+    if maduros:
+        alvo = min(maduros, key=dist2)
+        acao = "colher"
+    elif mortos:
+        alvo = min(mortos, key=dist2)
+        acao = "remover"
+    else:
+        ultimo_tempo = agora
+        return pos_atual, "Nenhuma ação possível", 0, 0
+
+    alvo.coletada = True
+    coords = (alvo.x, alvo.y)
+    alvo.resetar()
     ultimo_tempo = agora
-    return (0, 0), "Nenhuma ação feita", 0, 0
-    
+
+    if acao == "colher":
+        return coords, f"Colheu e replantou em {coords}", 1, 0
+    else:
+        return coords, f"Removeu planta morta em {coords}", 0, 1
