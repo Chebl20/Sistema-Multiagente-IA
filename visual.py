@@ -253,13 +253,13 @@ def desenhar_grid_coordenadas(tela, largura, altura, fonte_pequena, tamanho_grid
     # Linhas horizontais com coordenadas
     for y in range(0, altura, tamanho_grid):
         pygame.draw.line(tela, cor_grid, (0, y), (largura, y), 1)
-        if y > 0:  # Não desenha no y=0
+        if y > 0:  # Não desenha nomortas y=0
             texto = fonte_pequena.render(str(y), True, cor_texto)
             tela.blit(texto, (2, y + 2))
 
 def desenhar_hud_melhorado(tela, fonte, fonte_pequena, acao_irrigador, acao_colhedor, 
                            leitura_sensor, colhidas, mortas, tempo_passado, _,
-                           pos_irrigador=None, pos_colhedor=None):
+                           pos_irrigador=None, pos_colhedor=None, plantas_vivas=20):
     """HUD sem emojis, dead-bar ajustada e texto reposicionado para visibilidade"""
 
     # Painel principal (220×altura suficiente)
@@ -323,7 +323,7 @@ def desenhar_hud_melhorado(tela, fonte, fonte_pequena, acao_irrigador, acao_colh
     # Cálculo consistente de plantas vivas: 20 totais - colhidas - mortas
     # Garante que o número de plantas vivas nunca seja negativo
     TOTAL_PLANTAS = 20
-    plantas_vivas = max(0, TOTAL_PLANTAS - colhidas - mortas)
+    plantas_vivas = plantas_vivas
     total_plantas = TOTAL_PLANTAS  # Usamos o total fixo para cálculos de porcentagem
     largura_barra = painel_w - 30
     altura_barra = 15

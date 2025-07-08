@@ -112,7 +112,7 @@ while rodando:
     desenhar_hud_melhorado(
         tela, fonte_principal, fonte_pequena,
         ultima_acao_irrigador, ultima_acao_colhedor, ultimas_leituras_sensor,
-        plantas_colhidas, plantas_mortas, tempo_passado, len(plantas)
+        plantas_colhidas, plantas_mortas, tempo_passado, len(plantas), plantas_vivas = sum(1 for p in plantas if not p.morta and not p.coletada)
     )
 
     desenhar_estatisticas_tempo_real(tela, fonte_pequena, plantas)
