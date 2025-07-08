@@ -90,10 +90,8 @@ while rodando:
         pos_colhedor = tuple(nova_pos_colh)
     ultima_acao_colhedor = acao_colh
     colhedor_ativo = "Colhendo" in acao_colh
-    plantas_colhidas += colhida
-    plantas_mortas   += morta
-
-
+    
+    # Atualiza contadores (removido o incremento duplicado)
     plantas_colhidas += colhida
     plantas_mortas += morta
 

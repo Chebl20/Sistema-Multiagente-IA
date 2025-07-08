@@ -258,7 +258,7 @@ def desenhar_grid_coordenadas(tela, largura, altura, fonte_pequena, tamanho_grid
             tela.blit(texto, (2, y + 2))
 
 def desenhar_hud_melhorado(tela, fonte, fonte_pequena, acao_irrigador, acao_colhedor, 
-                           leitura_sensor, colhidas, mortas, tempo_passado, total_plantas,
+                           leitura_sensor, colhidas, mortas, tempo_passado, _,
                            pos_irrigador=None, pos_colhedor=None):
     """HUD sem emojis, dead-bar ajustada e texto reposicionado para visibilidade"""
 
@@ -320,8 +320,11 @@ def desenhar_hud_melhorado(tela, fonte, fonte_pequena, acao_irrigador, acao_colh
               (painel_x+5, y_pos))
     y_pos += 30
 
-    # Novo: viva = total de plantas menos as mortas
-    plantas_vivas = total_plantas - mortas
+    # Cálculo consistente de plantas vivas: 20 totais - colhidas - mortas
+    # Garante que o número de plantas vivas nunca seja negativo
+    TOTAL_PLANTAS = 20
+    plantas_vivas = max(0, TOTAL_PLANTAS - colhidas - mortas)
+    total_plantas = TOTAL_PLANTAS  # Usamos o total fixo para cálculos de porcentagem
     largura_barra = painel_w - 30
     altura_barra = 15
 
@@ -392,11 +395,12 @@ def desenhar_grid_fundo(tela, largura, altura, tamanho_grid=50):
 def desenhar_estatisticas_tempo_real(tela, fonte_pequena, plantas, x_offset=10, y_offset=550):
     """Desenha estatísticas em tempo real na parte inferior da tela"""
     
-    # Calcula estatísticas
-    total = len(plantas)
-    vivas = sum(1 for p in plantas if not p.morta and not p.coletada)
+    # Calcula estatísticas consistentes com o HUD
+    TOTAL_PLANTAS = 20
     colhidas = sum(1 for p in plantas if p.coletada)
     mortas = sum(1 for p in plantas if p.morta)
+    vivas = sum(1 for p in plantas if not p.morta and not p.coletada)
+    total = TOTAL_PLANTAS  # Total fixo de plantas
     
     if vivas > 0:
         agua_media = sum(p.agua for p in plantas if not p.morta and not p.coletada) / vivas
