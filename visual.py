@@ -259,7 +259,7 @@ def desenhar_grid_coordenadas(tela, largura, altura, fonte_pequena, tamanho_grid
 
 def desenhar_hud_melhorado(tela, fonte, fonte_pequena, acao_irrigador, acao_colhedor, 
                            leitura_sensor, colhidas, mortas, tempo_passado, total_plantas,
-                           pos_irrigador=None, pos_colhedor=None):
+                           pos_irrigador=None, pos_colhedor=None, plantas_vivas=20):
     """HUD sem emojis, dead-bar ajustada e texto reposicionado para visibilidade"""
 
     # Painel principal (220×altura suficiente)
@@ -321,7 +321,7 @@ def desenhar_hud_melhorado(tela, fonte, fonte_pequena, acao_irrigador, acao_colh
     y_pos += 30
 
     # Novo: viva = total de plantas menos as mortas
-    plantas_vivas = total_plantas - mortas
+    plantas_vivas = plantas_vivas
     largura_barra = painel_w - 30
     altura_barra = 15
 
