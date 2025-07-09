@@ -321,6 +321,7 @@ def desenhar_hud_melhorado(tela, fonte, fonte_pequena, acao_irrigador, acao_colh
     y_pos += 30
 
     # Novo: viva = total de plantas menos as mortas
+    plantas_vivas = total_plantas - mortas
     largura_barra = painel_w - 30
     altura_barra = 15
 
