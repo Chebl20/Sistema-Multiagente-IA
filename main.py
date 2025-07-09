@@ -13,7 +13,7 @@ from visual import (
 )
 from agentes.irrigador import agir_irrigador
 from agentes.colhedor import agir_colhedor
-from agentes.sensor import agir_sensor
+from agentes import sensor
 
 # Inicialização do Pygame
 pygame.init()
@@ -51,7 +51,6 @@ print("Agentes IA: Irrigador, Colhedor e Sensor")
 print("-" * 50)
 
 while rodando:
-    # Eventos
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
             rodando = False
@@ -60,7 +59,6 @@ while rodando:
                 print(f"Pausado - Tempo: {int(time.time() - TEMPO_INICIAL)}s")
                 pygame.time.wait(1000)
             elif evento.key == pygame.K_r:
-                # Reiniciar sistema
                 plantas = [Planta(80 + (i % 5) * 130, 80 + (i // 5) * 110) for i in range(20)]
                 plantas_colhidas = plantas_mortas = 0
                 plantas_colhidas_anterior = plantas_mortas_anterior = 0
@@ -69,42 +67,34 @@ while rodando:
                 ultimo_relatorio = -1
                 print("Sistema reiniciado!")
 
-    # Lógica de atualização
     tela.fill(CORES['BRANCO'])
     desenhar_grid_fundo(tela, 780, ALTURA)
 
     for planta in plantas:
         planta.atualizar()
 
-    # Irrigador: só atualiza posição se tiver uma planta ativa
-    nova_pos_irrig, acao_irrig = agir_irrigador(plantas)
-    # ignora o (0,0) de idle — só move quando o irrigador realmente recebe uma planta
+    # Sensor: deve ser chamado antes dos demais agentes
+    ultimas_leituras_sensor = sensor.agir_sensor(plantas)
+
+    # Irrigador depende exclusivamente das listas do sensor
+    nova_pos_irrig, acao_irrig = agir_irrigador(sensor.plantas_criticas + sensor.plantas_preventivas)
     if tuple(nova_pos_irrig) != (0, 0):
         pos_irrigador = tuple(nova_pos_irrig)
     ultima_acao_irrigador = acao_irrig
-    irrigador_ativo = "Irrigando" in acao_irrig
+    irrigador_ativo = "Irrigou" in acao_irrig
 
-    # Colhedor
-    nova_pos_colh, acao_colh, colhida, morta = agir_colhedor(plantas, pos_colhedor)
+    # Colhedor depende exclusivamente das listas do sensor
+    nova_pos_colh, acao_colh, colhida, morta = agir_colhedor(sensor.plantas_maduras + sensor.plantas_mortas, pos_colhedor)
     if tuple(nova_pos_colh) != (0, 0):
         pos_colhedor = tuple(nova_pos_colh)
     ultima_acao_colhedor = acao_colh
-    colhedor_ativo = "Colhendo" in acao_colh
-    plantas_colhidas += colhida
-    plantas_mortas   += morta
-
-
+    colhedor_ativo = "Colheu" in acao_colh
     plantas_colhidas += colhida
     plantas_mortas += morta
 
-    # Sensor
-    ultimas_leituras_sensor = agir_sensor(plantas)
-
-    # Tempo
     tempo_atual = obter_tempo_pygame()
     tempo_passado = int(time.time() - TEMPO_INICIAL)
 
-    # Renderização
     for planta in plantas:
         desenhar_planta_melhorada(tela, planta, fonte_pequena, tempo_atual)
 
@@ -119,7 +109,6 @@ while rodando:
 
     desenhar_estatisticas_tempo_real(tela, fonte_pequena, plantas)
 
-    # Feedback para colheitas e mortes únicas
     if plantas_colhidas != plantas_colhidas_anterior:
         print(f"Planta colhida! Total: {plantas_colhidas}")
         plantas_colhidas_anterior = plantas_colhidas
@@ -127,7 +116,6 @@ while rodando:
         print(f"Planta morreu! Total: {plantas_mortas}")
         plantas_mortas_anterior = plantas_mortas
 
-    # Relatório periódico a cada 30s (apenas uma vez)
     if tempo_passado % 30 == 0 and tempo_passado != ultimo_relatorio and tempo_passado > 0:
         vivas = sum(1 for p in plantas if not p.morta and not p.coletada)
         if vivas > 0:
@@ -139,7 +127,6 @@ while rodando:
     pygame.display.flip()
     relogio.tick(12)
 
-# Relatório final
 print("\n" + "="*50)
 print("RELATÓRIO FINAL DO SISTEMA")
 print("="*50)
