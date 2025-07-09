@@ -23,11 +23,11 @@ pygame.display.set_caption("Sistema de Agricultura Automatizada - IA Competitiva
 
 # Fontes e tempo
 fonte_principal, fonte_pequena = criar_fontes()
-TEMPO_INICIAL = time.time()
 relogio = pygame.time.Clock()
 
-# Inicialização das plantas
+# Estado inicial
 plantas = [Planta(80 + (i % 5) * 130, 80 + (i // 5) * 110) for i in range(20)]
+TEMPO_INICIAL = time.time()
 
 # Estados iniciais dos agentes
 pos_irrigador = (0, 0)
@@ -37,6 +37,25 @@ ultima_acao_colhedor = "Inicializando..."
 ultimas_leituras_sensor = "Coletando dados..."
 irrigador_ativo = False
 colhedor_ativo = False
+
+# Estatísticas dos agentes
+estatisticas_agentes = {
+    'irrigador': {
+        'plantas_regadas': 0,
+        'agua_fornecida': 0,
+        'ultima_acao': ""
+    },
+    'colhedor': {
+        'plantas_colhidas': 0,
+        'plantas_removidas': 0,
+        'ultima_acao': ""
+    },
+    'sensor': {
+        'leituras_realizadas': 0,
+        'plantas_em_risco': 0,
+        'ultima_leitura': ""
+    }
+}
 
 # Contadores e controle de relatórios
 plantas_colhidas = plantas_mortas = 0
@@ -81,24 +100,60 @@ while rodando:
     # ignora o (0,0) de idle — só move quando o irrigador realmente recebe uma planta
     if tuple(nova_pos_irrig) != (0, 0):
         pos_irrigador = tuple(nova_pos_irrig)
+        # Atualiza estatísticas do irrigador
+        if "Irrigou" in acao_irrig:
+            estatisticas_agentes['irrigador']['plantas_regadas'] += 1
+            # Extrai a quantidade de água fornecida da mensagem
+            try:
+                agua = int(acao_irrig.split("para")[1].split(")")[0].strip())
+                estatisticas_agentes['irrigador']['agua_fornecida'] += agua
+            except:
+                pass
     ultima_acao_irrigador = acao_irrig
+    estatisticas_agentes['irrigador']['ultima_acao'] = acao_irrig
     irrigador_ativo = "Irrigando" in acao_irrig
 
     # Colhedor
     nova_pos_colh, acao_colh, colhida, morta = agir_colhedor(plantas, pos_colhedor)
     if tuple(nova_pos_colh) != (0, 0):
         pos_colhedor = tuple(nova_pos_colh)
+        # Atualiza estatísticas do colhedor
+        if colhida > 0:
+            estatisticas_agentes['colhedor']['plantas_colhidas'] += colhida
+        if morta > 0:
+            estatisticas_agentes['colhedor']['plantas_removidas'] += morta
+    
     ultima_acao_colhedor = acao_colh
+    estatisticas_agentes['colhedor']['ultima_acao'] = acao_colh
     colhedor_ativo = "Colhendo" in acao_colh
     plantas_colhidas += colhida
-    plantas_mortas   += morta
+    plantas_mortas += morta
 
 
     plantas_colhidas += colhida
     plantas_mortas += morta
 
     # Sensor
-    ultimas_leituras_sensor = agir_sensor(plantas)
+    leitura_anterior = ultimas_leituras_sensor
+    resultado_sensor = agir_sensor(plantas)
+    
+    # Atualiza estatísticas do sensor
+    if isinstance(resultado_sensor, dict):  # Nova leitura de dados
+        estatisticas_agentes['sensor']['leituras_realizadas'] += 1
+        estatisticas_agentes['sensor']['plantas_em_risco'] = len(resultado_sensor['plantas_criticas'])
+        # Formata a mensagem para exibição no HUD
+        if resultado_sensor['plantas_criticas']:
+            crit_txt = f"Plantas com pouca água: {resultado_sensor['plantas_criticas'][:3]}"
+            if len(resultado_sensor['plantas_criticas']) > 3:
+                crit_txt += f" e mais {len(resultado_sensor['plantas_criticas']) - 3}..."
+        else:
+            crit_txt = "Todas as plantas estão hidratadas"
+        
+        ultimas_leituras_sensor = f"{crit_txt} | Água: {resultado_sensor['agua_media']:.1f}% | Maturidade: {resultado_sensor['maturidade_media']:.1f}%"
+        estatisticas_agentes['sensor']['ultima_leitura'] = ultimas_leituras_sensor
+    else:
+        # Mantém a mensagem de espera
+        ultimas_leituras_sensor = resultado_sensor
 
     # Tempo
     tempo_atual = obter_tempo_pygame()
@@ -129,11 +184,48 @@ while rodando:
 
     # Relatório periódico a cada 30s (apenas uma vez)
     if tempo_passado % 30 == 0 and tempo_passado != ultimo_relatorio and tempo_passado > 0:
-        vivas = sum(1 for p in plantas if not p.morta and not p.coletada)
-        if vivas > 0:
-            agua_media = sum(p.agua for p in plantas if not p.morta and not p.coletada) / vivas
-            maturidade_media = sum(p.maturidade for p in plantas if not p.morta and not p.coletada) / vivas
-            print(f"Relatório {tempo_passado}s - Vivas: {vivas}, Água: {agua_media:.1f}%, Maturidade: {maturidade_media:.1f}%")
+        # Usa os dados do sensor se disponíveis, senão calcula
+        if isinstance(ultimas_leituras_sensor, dict):
+            vivas = ultimas_leituras_sensor['plantas_vivas']
+            agua_media = ultimas_leituras_sensor['agua_media']
+            maturidade_media = ultimas_leituras_sensor['maturidade_media']
+        else:
+            vivas = sum(1 for p in plantas if not p.morta and not p.coletada)
+            if vivas > 0:
+                agua_media = sum(p.agua for p in plantas if not p.morta and not p.coletada) / vivas
+                maturidade_media = sum(p.maturidade for p in plantas if not p.morta and not p.coletada) / vivas
+            else:
+                agua_media = maturidade_media = 0
+            print("\n" + "="*50)
+            print(f"RELATÓRIO DE DESEMPENHO - {tempo_passado}s")
+            print("="*50)
+            
+            # Relatório geral
+            print("\n📊 VISÃO GERAL")
+            print(f"🌱 Plantas vivas: {vivas}")
+            print(f"💧 Nível médio de água: {agua_media:.1f}%")
+            print(f"🌿 Maturidade média: {maturidade_media:.1f}%")
+            
+            # Relatório do Irrigador
+            print("\n🚰 IRRIGADOR")
+            print(f"💦 Plantas regadas: {estatisticas_agentes['irrigador']['plantas_regadas']}")
+            print(f"💧 Água fornecida: {estatisticas_agentes['irrigador']['agua_fornecida']} unidades")
+            print(f"⏱ Última ação: {estatisticas_agentes['irrigador']['ultima_acao']}")
+            
+            # Relatório do Colhedor
+            print("\n🤖 COLHEDOR")
+            print(f"🌾 Plantas colhidas: {estatisticas_agentes['colhedor']['plantas_colhidas']}")
+            print(f"💀 Plantas removidas: {estatisticas_agentes['colhedor']['plantas_removidas']}")
+            print(f"⏱ Última ação: {estatisticas_agentes['colhedor']['ultima_acao']}")
+            
+            # Relatório do Sensor
+            print("\n📡 SENSOR")
+            print(f"📊 Leituras realizadas: {estatisticas_agentes['sensor']['leituras_realizadas']}")
+            print(f"⚠️ Plantas em risco: {estatisticas_agentes['sensor']['plantas_em_risco']}")
+            print(f"⏱ Última leitura: {estatisticas_agentes['sensor']['ultima_leitura']}")
+            
+            print("\n" + "="*50 + "\n")
+            
         ultimo_relatorio = tempo_passado
 
     pygame.display.flip()
