@@ -1,16 +1,12 @@
+### colhedor.py
 import time
 
 AMARELO = (255, 215, 0)
 
 ultimo_tempo = 0
-delay = 2.0  # segundos
+delay = 0.0  # segundos
 
 def agir_colhedor(plantas, pos_atual):
-    """
-    Retorna (pos_x, pos_y), mensagem, colhidas, removidas.
-    - plantas: lista de objetos com atributos x, y, maturidade, morta, coletada e método resetar()
-    - pos_atual: tupla (x_atual, y_atual) do agente
-    """
     global ultimo_tempo
 
     agora = time.time()
@@ -26,7 +22,6 @@ def agir_colhedor(plantas, pos_atual):
         dy = p.y - pos_atual[1]
         return dx*dx + dy*dy
 
-    # primeiro colher maduros, depois remover mortos
     if maduros:
         alvo = min(maduros, key=dist2)
         acao = "colher"
